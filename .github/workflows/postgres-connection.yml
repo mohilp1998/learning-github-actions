@@ -7,7 +7,7 @@ jobs:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     # Docker Hub image that `container-job` executes in
-    container: node:10.18-jessie
+    container: python:3.6.15
 
     # Service containers to run with `container-job`
     services:
@@ -32,16 +32,16 @@ jobs:
 
       # Performs a clean installation of all dependencies in the `package.json` file
       # For more information, see https://docs.npmjs.com/cli/ci.html
-      - name: Install dependencies
-        run: npm ci
+      - name: Install postgres connector
+        run: pip3 install psycopg2
 
       - name: Connect to PostgreSQL
         # Runs a script that creates a PostgreSQL table, populates
         # the table with data, and then retrieves the data.
-        run: node client.js
+        run: python3 testing.py
         # Environment variables used by the `client.js` script to create a new PostgreSQL table.
         env:
           # The hostname used to communicate with the PostgreSQL service container
-          POSTGRES_HOST: postgres
+          POSTGRES_HOST: localhost
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
