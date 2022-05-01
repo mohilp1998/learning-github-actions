@@ -1,6 +1,8 @@
 import psycopg2
+import os
 
-conn = psycopg2.connect(database = "postgres", user = "postgres", password = "postgres", host = "localhost", port = "5432")
+conn = psycopg2.connect(database = "postgres", user = "postgres", password = "postgres", 
+    host = os.environ.get("POSTGRES_HOST"), port = os.environ.get("POSTGRES_PORT"))
 print("Opened database successfully")
 
 cur = conn.cursor()
