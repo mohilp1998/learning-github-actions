@@ -49,6 +49,7 @@ class TestConnector():
         Basic connecter to db test. Just checking if connection established
         and corrected values are fetched
         """
+        print("Testing here")
         conn = connect_to_db(db_server = "postgre-sql", db_name = self.database, db_user = self.user,
             db_password = self.password, db_host = self.host)
         cur = conn.cursor()
