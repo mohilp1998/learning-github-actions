@@ -21,7 +21,6 @@ class TestConnector():
         pass
 
     def put_data(self):
-        print("Setting up the test")
         conn = psycopg2.connect(database = self.database, user = self.user, password = self.password,
             host = self.host, port = self.port)
         
@@ -52,7 +51,6 @@ class TestConnector():
         Basic connecter to db test. Just checking if connection established
         and corrected values are fetched
         """
-        print("Testing here")
         self.put_data() # putting data to the db
         conn = connect_to_db(db_server = "postgre-sql", db_name = self.database, db_user = self.user,
             db_password = self.password, db_host = self.host)
@@ -68,4 +66,5 @@ class TestConnector():
             assert(row[0] == index)
             assert(row[1] == self.name[index])
             assert(row[2] == self.age[index])
+            index += 1
         conn.close()
