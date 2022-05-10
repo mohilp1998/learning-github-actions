@@ -14,6 +14,7 @@ class TestConnector():
 
     @classmethod
     def setUp(self):
+        print("Setting up the test")
         conn = psycopg2.connect(database = self.database, user = self.user, password = self.password,
             host = self.host, port = self.port)
         
@@ -51,6 +52,10 @@ class TestConnector():
         conn = connect_to_db(db_server = "postgre-sql", db_name = self.database, db_user = self.user,
             db_password = self.password, db_host = self.host)
         cur = conn.cursor()
+        cur.execute("""SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public'""")
+        for table in cur.fetchall():
+            print(table)
         cur.execute("SELECT id, name, age from COMPANY")
         rows = cur.fetchall()
         index = 0
