@@ -13,7 +13,14 @@ class TestConnector():
     port = os.environ.get("POSTGRES_PORT")
 
     @classmethod
-    def setUp(self):
+    def set_up(self):
+        pass
+    
+    @classmethod
+    def tear_down(self):
+        pass
+
+    def put_data(self):
         print("Setting up the test")
         conn = psycopg2.connect(database = self.database, user = self.user, password = self.password,
             host = self.host, port = self.port)
@@ -40,16 +47,13 @@ class TestConnector():
         conn.commit()
         conn.close()
     
-    @classmethod
-    def tearDown(self):
-        pass
-
     def test_connect_to_db(self):
         """
         Basic connecter to db test. Just checking if connection established
         and corrected values are fetched
         """
         print("Testing here")
+        self.put_data() # putting data to the db
         conn = connect_to_db(db_server = "postgre-sql", db_name = self.database, db_user = self.user,
             db_password = self.password, db_host = self.host)
         cur = conn.cursor()
@@ -57,11 +61,11 @@ class TestConnector():
             WHERE table_schema = 'public'""")
         for table in cur.fetchall():
             print(table)
-        # cur.execute("SELECT id, name, age from COMPANY")
-        # rows = cur.fetchall()
-        # index = 0
-        # for row in rows:
-        #     assert(row[0] == index)
-        #     assert(row[1] == self.name[index])
-        #     assert(row[2] == self.age[index])
+        cur.execute("SELECT id, name, age from COMPANY")
+        rows = cur.fetchall()
+        index = 0
+        for row in rows:
+            assert(row[0] == index)
+            assert(row[1] == self.name[index])
+            assert(row[2] == self.age[index])
         conn.close()
