@@ -1,5 +1,8 @@
 import psycopg2
 import os
+import sys
+sys.path.append('src/python/tools/db2graph/')
+from t2g import connect_to_db
 
 conn = psycopg2.connect(database = "postgres", user = "postgres", password = "postgres", 
     host = os.environ.get("POSTGRES_HOST"), port = os.environ.get("POSTGRES_PORT"))
@@ -16,7 +19,6 @@ cur.execute('''CREATE TABLE COMPANY
 conn.commit()
 print("Table created successfully")
 
-
 cur.execute("INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) \
       VALUES (1, 'Paul', 32, 'California', 20000.00 )")
 
@@ -31,6 +33,12 @@ cur.execute("INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) \
 
 print("Records created successfully")
 conn.commit()
+
+conn.close()
+
+conn = connect_to_db(db_server = "postgre-sql", db_name = "postgres", db_user = "postgres", 
+                db_password = "postgres", db_host = os.environ.get("POSTGRES_HOST"))
+cur = conn.cursor()
 
 cur.execute("SELECT id, name, address, salary  from COMPANY")
 rows = cur.fetchall()
