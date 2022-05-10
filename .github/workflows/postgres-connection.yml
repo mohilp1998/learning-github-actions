@@ -32,8 +32,8 @@ jobs:
 
       # Performs a clean installation of all dependencies in the `package.json` file
       # For more information, see https://docs.npmjs.com/cli/ci.html
-      - name: Install postgres connector
-        run: pip3 install psycopg2
+      - name: Installing dependencies
+        run: pip3 install -r requirements.txt
 
       - name: Connect to PostgreSQL
         # Runs a script that creates a PostgreSQL table, populates
