@@ -1,8 +1,8 @@
 import psycopg2
 import os
 import sys
-sys.path.append('src/python/tools/db2graph/')
-from t2g import connect_to_db
+# sys.path.append('src/python/tools/db2graph/')
+from src.python.tools.db2graph.t2g import connect_to_db
 
 conn = psycopg2.connect(database = "postgres", user = "postgres", password = "postgres", 
     host = os.environ.get("POSTGRES_HOST"), port = os.environ.get("POSTGRES_PORT"))
