@@ -43,7 +43,7 @@ class TestConnector():
         
         for i in range(num_data_to_insert):
             cur.execute(f"INSERT INTO COMPANY (ID,NAME,AGE) \
-                VALUES ({i}, {self.name[i]}, {self.age[i]})")
+                VALUES ({i}, '{self.name[i]}', {self.age[i]})")
         conn.commit()
         conn.close()
     
