@@ -1,5 +1,11 @@
-name: PostgreSQL service example
-on: push
+name: Testing DB2GRAPH for postgres
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   # Label of the container job
@@ -30,18 +36,14 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      # Performs a clean installation of all dependencies in the `package.json` file
-      # For more information, see https://docs.npmjs.com/cli/ci.html
       - name: Installing dependencies
         run: pip3 install -r requirements.txt
 
-      - name: Connect to PostgreSQL
-        # Runs a script that creates a PostgreSQL table, populates
-        # the table with data, and then retrieves the data.
+      - name: Running pytest
         run: pytest -s tests/test_postgres-basic.py
-        # Environment variables used by the `client.js` script to create a new PostgreSQL table.
+        # Environment variables used in the test
         env:
           # The hostname used to communicate with the PostgreSQL service container
           POSTGRES_HOST: postgres
-          # The default PostgreSQL port
+          # The default PostgreSQL port - using default port
           POSTGRES_PORT: 5432
