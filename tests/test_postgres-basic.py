@@ -211,11 +211,11 @@ class TestConnector():
             lines = [elem.split('\t')[0] for elem in lines]
 
             # Checking the elements that we added
-            for i in range(custs):
-                assert(custs[i] in lines)
-            for i in range(counts):
-                assert(counts[i] in lines)
-            for i in range(itms):
-                assert(itms[i] in lines)
+            for elem in custs:
+                assert(elem in lines)
+            for elem in counts:
+                assert(elem in lines)
+            for elem in itms:
+                assert(elem in lines)
         
         return
