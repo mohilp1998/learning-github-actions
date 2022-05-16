@@ -33,17 +33,20 @@ class TestConnector():
         cur = conn.cursor()
 
         # Create two tables - First Customers and second Orders
-        cur.execute('''CREATE TABLE CUSTOMERS
+        cur.execute('''CREATE TABLE CUSTOMERS 
                         (ID INT PRIMARY KEY NOT NULL,
                         CUSTOMERNAME TEXT NOT NULL,
                         COUNTRY TEXT NOT NULL,
                         PHONE VARCHAR(10) NOT NULL);''')
         conn.commit()
-        cur.execute('''CREATE TABLE ORDERS
+        cur.execute('''CREATE TABLE ORDERS 
                         (ID INT PRIMARY KEY NOT NULL,
-                        CUSTOMERID INT FOREIGN KEY REFERENCES CUSTOMERS(ID),
+                        CUSTOMERID INT NOT NULL,
                         AMOUNT INT NOT NULL,
-                        ITEM TEXT NOT NULL);''')
+                        ITEM TEXT NOT NULL,
+                        CONSTRAINT fk_customer
+                            FOREIGN KEY(CUSTOMERID) 
+                                REFERENCES CUSTOMERS(ID));''')
         conn.commit()
 
         # Insert some data
