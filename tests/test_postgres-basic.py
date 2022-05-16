@@ -42,8 +42,8 @@ class TestConnector():
         cur = conn.cursor()
 
         # DROP TABLE IF EXISTS
-        cur.execute("DROP TABLE IF EXISTS CUSTOMERS;")
         cur.execute("DROP TABLE IF EXISTS ORDERS;")
+        cur.execute("DROP TABLE IF EXISTS CUSTOMERS;")
         conn.commit()
 
         # Create two tables - First Customers and second Orders
