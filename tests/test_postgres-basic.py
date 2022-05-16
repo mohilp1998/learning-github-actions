@@ -41,6 +41,11 @@ class TestConnector():
                                 port = self.port)
         cur = conn.cursor()
 
+        # DROP TABLE IF EXISTS
+        cur.execute("DROP TABLE IF EXISTS customers;")
+        cur.execute("DROP TABLE IF EXISTS countries;")
+        conn.commit()
+
         # Create two tables - First Customers and second Orders
         cur.execute('''CREATE TABLE CUSTOMERS 
                         (ID INT PRIMARY KEY NOT NULL,
