@@ -195,9 +195,15 @@ class TestConnector():
 
         # Testing the function
         entity_mapping = entity_node_to_uuids(output_dir, conn, entity_queries_list, db_server)
-        print(entity_mapping)
 
+        # Asserting the corrections of the output
+        custs = list(set(self.customer_names)).sort()
+        custs = ['customers_customername_' + elem for elem in custs]
+        counts = list(set(self.country_names)).sort()
+        counts = ['customers_country_' + elem for elem in counts]
+        itms = list(set(self.item_names)).sort()
+        itms = ['orders_item_' + elem for elem in itms]
         with open(output_dir / "entity_mapping.txt", "r") as file:
-            for line in file:
-                print(line)
+            lines = file.readlines().rstrip()
+            print(lines)
         pass
