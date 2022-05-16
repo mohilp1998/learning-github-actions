@@ -33,78 +33,77 @@ class TestConnector():
         cur = conn.cursor()
 
         # Create two tables - First Customers and second Orders
-        cur.execute('''CREATE TABLE CUSTOMER
+        cur.execute('''CREATE TABLE CUSTOMERS
                         (ID INT PRIMARY KEY NOT NULL,
                         CUSTOMERNAME TEXT NOT NULL,
                         COUNTRY TEXT NOT NULL,
                         PHONE VARCHAR(10) NOT NULL);''')
         conn.commit()
-        cur.execute('''CREATE TABLE ORDER
+        cur.execute('''CREATE TABLE ORDERS
                         (ID INT PRIMARY KEY NOT NULL,
-                        CUSTOMERID INT NOT NULL,
+                        CUSTOMERID INT FOREIGN KEY REFERENCES CUSTOMERS(ID),
                         AMOUNT INT NOT NULL,
-                        ITEM TEXT NOT NULL,
-                        FOREIGN KEY (CUSTOMERID) REFERENCES CUSTOMER(ID));''')
+                        ITEM TEXT NOT NULL);''')
         conn.commit()
 
         # Insert some data
         # Inserting Customers
-        cur.execute(f"INSERT INTO CUSTOMER (ID,CUSTOMERNAME,COUNTRY,PHONE) \
+        cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
             VALUES (1, 'Sofia', 'Spain', '6081237654')")
-        cur.execute(f"INSERT INTO CUSTOMER (ID,CUSTOMERNAME,COUNTRY,PHONE) \
+        cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
             VALUES (2, 'Lukas', 'Germany', '6721576540')")
-        cur.execute(f"INSERT INTO CUSTOMER (ID,CUSTOMERNAME,COUNTRY,PHONE) \
+        cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
             VALUES (3, 'Rajesh', 'India', '5511234567')")
-        cur.execute(f"INSERT INTO CUSTOMER (ID,CUSTOMERNAME,COUNTRY,PHONE) \
+        cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
             VALUES (4, 'Daiyu', 'China', '3211248173')")
-        cur.execute(f"INSERT INTO CUSTOMER (ID,CUSTOMERNAME,COUNTRY,PHONE) \
+        cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
             VALUES (5, 'Hina', 'Japan', '6667890001')")
-        cur.execute(f"INSERT INTO CUSTOMER (ID,CUSTOMERNAME,COUNTRY,PHONE) \
+        cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
             VALUES (6, 'Lorenzo', 'Italy', '6260001111')")
-        cur.execute(f"INSERT INTO CUSTOMER (ID,CUSTOMERNAME,COUNTRY,PHONE) \
+        cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
             VALUES (7, 'Donghai', 'China', '7874561234')")
-        cur.execute(f"INSERT INTO CUSTOMER (ID,CUSTOMERNAME,COUNTRY,PHONE) \
+        cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
             VALUES (8, 'Shuchang', 'China', '4041015059')")
-        cur.execute(f"INSERT INTO CUSTOMER (ID,CUSTOMERNAME,COUNTRY,PHONE) \
+        cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
             VALUES (9, 'Johnny', 'USA', '5647525398')")
         conn.commit()
 
         # Inserting Orders
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (1, 3, 5, 'fenugreek')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (2, 7, 7, 'soy sauce')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (3, 6, 2, 'oregano')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (4, 1, 3, 'tomato')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (5, 3, 5, 'cumin')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (6, 5, 7, 'soy sauce')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (7, 2, 1, 'eggs')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (8, 9, 3, 'onions')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (9, 4, 3, 'onions')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (10, 5, 15, 'wasabi')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (11, 8, 9, 'rice')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (12, 4, 12, 'chicken breast')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (13, 5, 20, 'salmon')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (14, 6, 11, 'sourdough bread')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (15, 2, 8, 'meatballs')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (16, 9, 2, 'root beer')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (17, 2, 6, 'croissant')")
-        cur.execute(f"INSERT INTO ORDER (ID,CUSTOMERID,AMOUNT,ITEM) \
+        cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
             VALUES (18, 1, 4, 'taco sauce')")
         conn.commit()
 
