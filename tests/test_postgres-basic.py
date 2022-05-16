@@ -181,7 +181,6 @@ class TestConnector():
         entity_queries_list.append("SELECT DISTINCT customers.country from customers;")
         entity_queries_list.append("SELECT DISTINCT orders.item from orders;")
 
-        print(entity_queries_list)
         # Testing the function
         entity_mapping = entity_node_to_uuids(output_dir, conn, entity_queries_list, db_server)
         print(entity_mapping)
