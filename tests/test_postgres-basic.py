@@ -4,7 +4,7 @@ import random
 import sys
 from pathlib import Path
 sys.path.append('src/python/tools/db2graph/') # moving to the parent directory
-from db2graph import connect_to_db, entity_node_to_uuids
+from db2graph import connect_to_db, entity_node_to_uuids, post_processing
 
 class TestConnector():
     database = "postgres"
@@ -217,5 +217,53 @@ class TestConnector():
                 assert(elem in lines)
             for elem in itms:
                 assert(elem in lines)
+        
+        return
+    
+    def test_edges_entity_entity(self):
+        """
+        Testing edges_entity_entity type of queries which generate edges
+        """
+        self.fill_db() # Filling database with data for testing
+        
+        # Getting all the inputs for the function
+        output_dir = Path("output_dir/")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        db_server = 'postgre-sql'
+        
+        conn = psycopg2.connect(database = self.database,
+                                user = self.user,
+                                password = self.password,
+                                host = self.host,
+                                port = self.port)
+        
+        edge_entity_entity_queries_list = []
+        edge_entity_entity_queries_list.append("SELECT customers.customername, customers.country FROM customers ORDER BY customers.customername ASC;")
+        edge_entity_entity_queries_list.append("SELECT orders.item, customers.country FROM orders, customers WHERE orders.customerid = customers.id ORDER BY orders.item ASC;")
+        edge_entity_entity_rel_list = ["lives_in", "ordered_by_people_from_country"]
+
+        edge_entity_feature_val_queries_list = []
+        edge_entity_feature_val_rel_list = []
+
+        entity_mapping = None
+
+        generate_uuid = False
+
+        # Testing the function
+        post_processing(output_dir,
+                        conn,
+                        edge_entity_entity_queries_list,
+                        edge_entity_entity_rel_list,
+                        edge_entity_feature_val_queries_list,
+                        edge_entity_feature_val_rel_list,
+                        entity_mapping,
+                        generate_uuid,
+                        db_server)
+        
+        # Asserting the correctionness of the output
+        with open(output_dir / "all_edges.txt", "r") as file:
+            for line in file:
+                print(line)
         
         return
