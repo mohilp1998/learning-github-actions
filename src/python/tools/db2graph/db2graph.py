@@ -419,7 +419,6 @@ def entity_node_to_uuids(output_dir, cnx, entity_queries_list, db_server):
         # Potential issue: There might be duplicates now possible as drop_duplicates over smaller range
         # expected that user db does not have dupliacted
         while (True): # Looping till all rows are completed and processed
-            print(fetchSize)
             result = cursor.fetchmany(fetchSize)
             result = pd.DataFrame(result)
             if (result.shape[0] == 0):
