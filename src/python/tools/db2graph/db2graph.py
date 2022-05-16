@@ -446,6 +446,7 @@ def entity_node_to_uuids(output_dir, cnx, entity_queries_list, db_server):
 
             if first_pass:
                 delta = psutil.virtual_memory().used - mem_copy_used # delta between two virtual_memory(), i.e. mem used curr fetchSize
+                print(delta)
                 est_fetchSize = limit_fetchSize / delta * fetchSize # estimated optimal fetchSize for 
                 if est_fetchSize > limit_fetchSize:
                     fetchSize = int(limit_fetchSize)
