@@ -208,5 +208,6 @@ class TestConnector():
         itms = ['orders_item_' + elem for elem in itms]
         with open(output_dir / "entity_mapping.txt", "r") as file:
             lines = file.readlines()
+            lines = [elem.split('\t')[0] for elem in lines]
             print(lines)
         pass
