@@ -196,4 +196,8 @@ class TestConnector():
         # Testing the function
         entity_mapping = entity_node_to_uuids(output_dir, conn, entity_queries_list, db_server)
         print(entity_mapping)
+
+        with open(output_dir / "entity_mapping.txt", "r") as file:
+            for line in file:
+                print(line)
         pass
