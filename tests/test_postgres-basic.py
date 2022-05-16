@@ -13,10 +13,10 @@ class TestConnector():
     host = os.environ.get("POSTGRES_HOST")
     port = os.environ.get("POSTGRES_PORT")
 
-    customer_names = ['Sofia', 'Lukas', 'Rajesh', 'Daiyu', 'Hina', 'Lorenzo',
-                        'Donghai', 'Shuchang', 'Johnny']
-    country_names = ['Spain', 'Germany', 'India', 'China', 'Japan', 'Italy',
-                        'China', 'China', 'USA']
+    customer_names = ['sofia', 'lukas', 'rajesh', 'daiyu', 'hina', 'lorenzo',
+                        'donghai', 'shuchang', 'johnny']
+    country_names = ['spain', 'germany', 'india', 'china', 'japan', 'italy',
+                        'china', 'china', 'usa']
     item_names = ['fenugreek', 'soy sauce', 'oregano', 'tomato', 'cumin', 'soy sauce',
                     'eggs', 'onions', 'onions', 'wasabi', 'rice', 'chicken breast',
                     'salmon', 'sourdough bread', 'meatballs', 'root beer', 'croissant',
@@ -197,11 +197,14 @@ class TestConnector():
         entity_mapping = entity_node_to_uuids(output_dir, conn, entity_queries_list, db_server)
 
         # Asserting the corrections of the output
-        custs = list(set(self.customer_names)).sort()
+        custs = list(set(self.customer_names))
+        custs.sort()
         custs = ['customers_customername_' + elem for elem in custs]
-        counts = list(set(self.country_names)).sort()
+        counts = list(set(self.country_names))
+        counts.sort()
         counts = ['customers_country_' + elem for elem in counts]
-        itms = list(set(self.item_names)).sort()
+        itms = list(set(self.item_names))
+        itms.sort()
         itms = ['orders_item_' + elem for elem in itms]
         with open(output_dir / "entity_mapping.txt", "r") as file:
             lines = file.readlines().rstrip()
