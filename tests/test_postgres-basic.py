@@ -20,7 +20,12 @@ class TestConnector():
     def tear_down(self):
         pass
 
-    def put_data(self):
+    def test_connect_to_db(self):
+        """
+        Basic connecter to db test. Just checking if connection established
+        and corrected values are fetched
+        """
+        # Filling database with data for testing
         conn = psycopg2.connect(database = self.database, user = self.user, password = self.password,
             host = self.host, port = self.port)
         
@@ -45,13 +50,8 @@ class TestConnector():
                 VALUES ({i}, '{self.name[i]}', {self.age[i]})")
         conn.commit()
         conn.close()
-    
-    def test_connect_to_db(self):
-        """
-        Basic connecter to db test. Just checking if connection established
-        and corrected values are fetched
-        """
-        self.put_data() # putting data to the db - does not work if in set_up
+
+        # Setting the connect function to test
         conn = connect_to_db(db_server = "postgre-sql", db_name = self.database, db_user = self.user,
             db_password = self.password, db_host = self.host)
         cur = conn.cursor()
