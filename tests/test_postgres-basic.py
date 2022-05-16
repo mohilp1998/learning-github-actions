@@ -209,5 +209,13 @@ class TestConnector():
         with open(output_dir / "entity_mapping.txt", "r") as file:
             lines = file.readlines()
             lines = [elem.split('\t')[0] for elem in lines]
-            print(lines)
-        pass
+
+            # Checking the elements that we added
+            for i in range(custs):
+                assert(custs[i] in lines)
+            for i in range(counts):
+                assert(counts[i] in lines)
+            for i in range(itms):
+                assert(itms[i] in lines)
+        
+        return
