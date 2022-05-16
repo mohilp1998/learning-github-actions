@@ -414,7 +414,7 @@ def entity_node_to_uuids(output_dir, cnx, entity_queries_list, db_server):
         if first_pass:
             mem_copy = psutil.virtual_memory()
             mem_copy_used = mem_copy.used
-            limit_fetchSize = max(mem_copy.available / 2, 1000000000)
+            limit_fetchSize = min(mem_copy.available / 2, 1000000000)
 
         # Potential issue: There might be duplicates now possible as drop_duplicates over smaller range
         # expected that user db does not have dupliacted
@@ -530,7 +530,7 @@ def post_processing(output_dir, cnx, edge_entity_entity_queries_list, edge_entit
         if first_pass:
             mem_copy = psutil.virtual_memory()
             mem_copy_used = mem_copy.used
-            limit_fetchSize = max(mem_copy.available / 2, 1000000000)
+            limit_fetchSize = min(mem_copy.available / 2, 1000000000)
 
         # Potential issue: There might be duplicates now possible as drop_duplicates over smaller range
         # expected that user db does not have dupliacted
@@ -614,7 +614,7 @@ def post_processing(output_dir, cnx, edge_entity_entity_queries_list, edge_entit
         if first_pass:
             mem_copy = psutil.virtual_memory()
             mem_copy_used = mem_copy.used
-            limit_fetchSize = max(mem_copy.available / 2, 1000000000)
+            limit_fetchSize = min(mem_copy.available / 2, 1000000000)
 
         # Potential issue: There might be duplicates now possible as drop_duplicates over smaller range
         # expected that user db does not have dupliacted
