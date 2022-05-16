@@ -454,6 +454,8 @@ def entity_node_to_uuids(output_dir, cnx, entity_queries_list, db_server):
                 else:
                     fetchSize = 10000
                 first_pass = False  # executing get_fetchSize means we are in 
+            print(fetchSize)
+            break
         logging.info(f'finishing converting entity nodes to uuid, execution time: {time.time() - start_time2}')
     return entity_mapping.set_index('entity_node').to_dict()['uuid']
 
