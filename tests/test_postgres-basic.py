@@ -3,7 +3,7 @@ import psycopg2
 import random
 import sys
 sys.path.append('src/python/tools/db2graph/') # moving to the parent directory
-from t2g import connect_to_db
+from db2graph import connect_to_db
 
 class TestConnector():
     database = "postgres"

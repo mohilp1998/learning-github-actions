@@ -1,9 +1,8 @@
-import numpy as np
+import argparse
 import pandas as pd
 import mysql.connector
 from mysql.connector import errorcode
 import psycopg2
-import threading
 from pathlib import Path
 import uuid
 import re
@@ -15,7 +14,23 @@ import logging
 import psutil
 
 INVALID_ENTRY_LIST = ["0", None, "", 0, "not reported", "None", "none"]
-output_dir = Path("./")
+
+def set_args():
+    parser = argparse.ArgumentParser(
+                description='Db2Graph', prog='db2graph')
+
+    parser.add_argument('--config_path',
+                        metavar='config_path',
+                        type=str,
+                        default="",
+                        help='Path to the config file')
+
+    parser.add_argument('--output_directory',
+                        metavar='output_directory',
+                        type=str,
+                        default="./",
+                        help='Directory to put output data and log file')
+    return parser
 
 def config_parser_fn(config_name):
     """
@@ -79,13 +94,6 @@ def config_parser_fn(config_name):
         db_host = input_cfg["db_host"]
     else:
         print("ERROR: db_host is not defined")
-    
-    # output_directory is the directory that any output files will be saved at
-    if "output_directory" in input_cfg.keys():
-        output_dir = Path(input_cfg["output_directory"])
-    else:
-        # output_directory is defaulted to the current working directory
-        output_dir = Path("./")
 
     # generate_uuid is used to identify whether to generate the uuid using entity nodes or 
     # use the table_name-col_name-value as the unique identifier
@@ -100,6 +108,10 @@ def config_parser_fn(config_name):
     entity_node_sql_queries = list()
     if "entity_node_queries" in input_cfg.keys():
         query_filepath = input_cfg["entity_node_queries"]
+
+        if not Path(query_filepath).exists():
+            raise ValueError("{} does not exist".format(str(query_filepath)))
+
         file = open(query_filepath, 'r')
         entity_node_sql_queries = file.readlines()
         for i in range(len(entity_node_sql_queries)):
@@ -115,6 +127,10 @@ def config_parser_fn(config_name):
     edge_entity_entity_rel_list = list()
     if "edges_entity_entity_queries" in input_cfg.keys():
         query_filepath = input_cfg["edges_entity_entity_queries"]
+
+        if not Path(query_filepath).exists():
+            raise ValueError("{} does not exist".format(str(query_filepath)))
+
         file = open(query_filepath, 'r')
         # edge_entity_entity_sql_queries = file.readlines()
         read_lines = file.readlines()
@@ -128,7 +144,6 @@ def config_parser_fn(config_name):
                 edge_entity_entity_rel_list.append(read_lines[i])
             else:
                 edge_entity_entity_sql_queries.append(read_lines[i])
-        # print(edge_entity_entity_sql_queries)
     else:
         print("ERROR: edges_entity_entity_queries is not defined")
         exit(1)
@@ -138,6 +153,10 @@ def config_parser_fn(config_name):
     edge_entity_feature_values_rel_list = list()
     if "edges_entity_feature_values_queries" in input_cfg.keys():
         query_filepath = input_cfg["edges_entity_feature_values_queries"]
+
+        if not Path(query_filepath).exists():
+            raise ValueError("{} does not exist".format(str(query_filepath)))
+
         file = open(query_filepath, 'r')
         read_lines = file.readlines()
         for i in range(len(read_lines)):
@@ -150,12 +169,12 @@ def config_parser_fn(config_name):
                 edge_entity_feature_values_rel_list.append(read_lines[i])
             else:
                 edge_entity_feature_values_sql_queries.append(read_lines[i])
-        # print(edge_entity_feature_values_sql_queries)
     else:
         print("ERROR: edges_entity_feature_values_queries is not defined")
         exit(1)
 
-    return db_server, db_name, db_user, db_password, db_host, output_dir, generate_uuid, entity_node_sql_queries, edge_entity_entity_sql_queries, edge_entity_entity_rel_list, edge_entity_feature_values_sql_queries, edge_entity_feature_values_rel_list
+    return db_server, db_name, db_user, db_password, db_host, generate_uuid, entity_node_sql_queries, edge_entity_entity_sql_queries,\
+     edge_entity_entity_rel_list, edge_entity_feature_values_sql_queries, edge_entity_feature_values_rel_list
 
 def connect_to_db(db_server, db_name, db_user, db_password, db_host):
     """
@@ -217,7 +236,7 @@ def validation_check_entity_queries(entity_query_list):
     # Format: SELECT DISTINCT table_name.col_name FROM ____ WHERE ____;
     new_query_list = list()
     for q in range(len(entity_query_list)):
-        qry_split = entity_query_list[q].split(' ')
+        qry_split = entity_query_list[q].split()
         
         check_var = qry_split[0].lower() # To ensure no case sensitivity issues
         if (check_var != "select"):
@@ -259,7 +278,7 @@ def validation_check_edge_entity_entity_queries(edge_entity_entity_queries_list)
     # Format: SELECT table1_name.col1_name, table2_name.col2_name FROM ____ WHERE ____ (and so on);
     new_query_list = list()
     for q in range(len(edge_entity_entity_queries_list)):
-        qry_split = edge_entity_entity_queries_list[q].split(' ')
+        qry_split = edge_entity_entity_queries_list[q].split()
         
         check_var = qry_split[0].lower()
         if (check_var != "select"):
@@ -343,16 +362,16 @@ def get_uuid(row):
     :param row: a row in the dataframe
     :return uuid: the UUID associated with entity_node on this row
     """
-    # return uuid.uuid5(uuid.NAMESPACE_DNS, row['entity_node'])
-    return row['entity_node']
+    return uuid.uuid5(uuid.NAMESPACE_DNS, row['entity_node'])
 
-def entity_node_to_uuids(cnx, entity_queries_list, db_server):
+def entity_node_to_uuids(output_dir, cnx, entity_queries_list, db_server):
     """
     Takes entity node queries as inputs, execute the queries, store the results in temp dataframes,
     then concatenate each entity node with its respective table name & column name, 
     convert each into uuid, and store the mapping in a dictionary
     Assumption: Entries are case insentitive, i.e. 'BOB' and 'bob' are considered as duplicates
 
+    :param output_dir: Directory to put output file
     :param cnx: Cursor object
     :param entity_queries_list: List of all the entity queries 
     :param db_server: Database server name
@@ -361,56 +380,91 @@ def entity_node_to_uuids(cnx, entity_queries_list, db_server):
     logging.info('starting entity_node_to_uuids')
     entity_mapping = pd.DataFrame()
 
-    for i in range(len(entity_queries_list)):
-        entity_query = entity_queries_list[i]
 
-        # Executing Part
-        start_time1 = time.time()
-        cursor_name = "entity_node_cursor" + str(i) # Name imp because: https://www.psycopg.org/docs/usage.html#server-side-cursors
+    fetchSize = 10000
+    # New post processing code for edges entity node to entity nodes
+    for i in range(len(entity_queries_list)):
+        start_time2 = time.time()
+        first_pass = True
+
+        # Executing the query and timing it
+        add_time1 = time.time()
+        query = entity_queries_list[i]
+        cursor_name = "entity_queries_list" + str(i)  # Name imp because: https://www.psycopg.org/docs/usage.html#server-side-cursors
         cursor = []
         if db_server == 'maria-db':
             cursor = cnx.cursor()
         elif db_server == 'postgre-sql':
             cursor = cnx.cursor(name = cursor_name)
-        cursor.execute(entity_query)
-        result = pd.DataFrame(cursor)
-        logging.info(f'finsihing cursor.execute {time.time() - start_time1}')
-        start_time2 = time.time()
+        cursor.execute(query)
+        logging.info(f'Cursor.execute time is: {time.time() - add_time1}')
 
+        # Getting Basic Details
         # extracting table and column names
-        # TODO: Improve table name extraction logic to better formatting
-        table_name = entity_query.split()[2].split('.')[0]  # table name of the query to execute
-        col_name = str(entity_query.split()[2].split('.')[1]) # column name of the query
+        table_name = query.split()[2].split('.')[0]  # table name of the query to execute
+        col_name = str(query.split()[2].split('.')[1]) # column name of the query
+        
+        # Processing each batch of cursor on client
+        rowsCompleted = 0
 
-        result = result.applymap(clean_token)  # strip tokens and lower case strings
-        result = result[~result.iloc[:, 0].isin(INVALID_ENTRY_LIST)] # cleaning invalid entries
-        # maybe re-index once here?
+        # In an initial sample pass, estimates the optimal maximum possible fetchSize for given query based on memory usage report of virtual_memory() 
+        # process data with fetchSize=10000, record the amount of memory used,
+        # increase fetchSize if the amount of memory used is less than half of machine's total available memory, 
+        # Note: all unit size are in bytes, fetchSize limited between 10000 and 100000000 bytes
+        if first_pass:
+            mem_copy = psutil.virtual_memory()
+            mem_copy_used = mem_copy.used
+            limit_fetchSize = mem_copy.available / 2
 
-        # concatenate each entity node with its respective table nam
-        result[result.columns[0]] = table_name + '_' + col_name + '_' + result[result.columns[0]].map(str)
+        # Potential issue: There might be duplicates now possible as drop_duplicates over smaller range
+        # expected that user db does not have dupliacted
+        while (True): # Looping till all rows are completed and processed
+            result = cursor.fetchmany(fetchSize)
+            result = pd.DataFrame(result)
+            if (result.shape[0] == 0):
+                break
 
-        result['uuid'] = ''
-        result.columns = ['entity_node', 'uuid']
+            # Cleaning Part
+            result = result.applymap(clean_token)  # strip tokens and lower case strings
+            result = result[~result.iloc[:, 0].isin(INVALID_ENTRY_LIST)] # clean invalid data
+            result = result.drop_duplicates()  # remove invalid row
 
-        result['entity_node'] = result['entity_node'].str.lower() # entries in lower case
-        result = result.drop_duplicates() # removing duplicates
+            # concatenate each entity node with its respective table nam
+            result[result.columns[0]] = table_name + '_' + col_name + '_' + result[result.columns[0]].map(str)
 
-        # convert each entity node to uuid
-        result['uuid'] = result.apply(lambda row: get_uuid(row), axis=1)
+            result['uuid'] = ''
+            result.columns = ['entity_node', 'uuid']
+            result['entity_node'] = result['entity_node'].str.lower() # entries in lower case
+            result = result.drop_duplicates() # removing duplicates
+            result['uuid'] = result.apply(lambda row: get_uuid(row), axis=1) # convert each entity node to uuid
+            entity_mapping = pd.concat([entity_mapping, result]).drop_duplicates()
 
-        entity_mapping = pd.concat([entity_mapping, result]).drop_duplicates()
-        logging.info(f'finishing entity_node_to_uuid {time.time() - start_time2}')
-    
-    entity_mapping.to_csv(output_dir / Path("entity_mapping.txt"), sep='\t', header=False, index=False)
+            result.to_csv(output_dir / Path("entity_mapping.txt"), sep='\t',\
+                header=False, index=False, mode='a') # Appending the output to disk
+            del result
+            rowsCompleted += fetchSize
+
+            if first_pass:
+                delta = psutil.virtual_memory().used - mem_copy_used # delta between two virtual_memory(), i.e. mem used curr fetchSize
+                est_fetchSize = limit_fetchSize / delta * fetchSize # estimated optimal fetchSize for 
+                if est_fetchSize > limit_fetchSize:
+                    fetchSize = int(limit_fetchSize)
+                elif 10000 < est_fetchSize and est_fetchSize <= limit_fetchSize:
+                    fetchSize = int(est_fetchSize)
+                else:
+                    fetchSize = 10000
+                first_pass = False  # executing get_fetchSize means we are in 
+        logging.info(f'finishing converting entity nodes to uuid, execution time: {time.time() - start_time2}')
     return entity_mapping.set_index('entity_node').to_dict()['uuid']
 
-def post_processing(cnx, edge_entity_entity_queries_list, edge_entity_entity_rel_list, 
+def post_processing(output_dir, cnx, edge_entity_entity_queries_list, edge_entity_entity_rel_list, 
     edge_entity_feature_val_queries_list, edge_entity_feature_val_rel_list, entity_mapping,
     generate_uuid, db_server):
     """
     Executes the given queries_list one by one, cleanses the data by removing duplicates,
     then replace the entity nodes with their respective UUIDs, and store the final result in a dataframe/.txt file
 
+    :param output_dir: Directory to put output file
     :param cnx: Cursor object
     :param edge_entity_entity_queries_list: List of all the queries defining edges from entity nodes to entity nodes
     :param edge_entity_entity_rel_list: List of all the relationships defining edges from entity nodes to entity nodes
@@ -432,44 +486,58 @@ def post_processing(cnx, edge_entity_entity_queries_list, edge_entity_entity_rel
         exit(1)
 
     src_rel_dst = pd.DataFrame()
-    open(output_dir / Path("all_edges(t2g).txt"), 'w').close() # Clearing the output file
+    open(output_dir / Path("all_edges.txt"), 'w').close() # Clearing the output file
     logging.info('in postprocessing')
 
     # These are just for metrics - Only correct when not batch processing
     num_uniq = []  # number of entities
     num_edge_type = []  # number of edges
     
-    run_old = False # Only for testing should be removed later
 
-    if run_old:
-        # edges from entity node to entity node processing
-        for i in range(len(edge_entity_entity_queries_list)):
-            query = edge_entity_entity_queries_list[i]
-            
-            start_time1 = time.time()
-            add_time1 = time.time()
-            cursor_name = "edge_entity_entity_cursor" + str(i)  # Name imp because: https://www.psycopg.org/docs/usage.html#server-side-cursors
-            cursor = []
-            if db_server == 'maria-db':
-                cursor = cnx.cursor()
-            elif db_server == 'postgre-sql':
-                cursor = cnx.cursor(name = cursor_name)
-            cursor.execute(query)
-            logging.info(f'Cursor.execute time is: {time.time() - add_time1}')
-            add_time2 = time.time()
-            result = pd.DataFrame(cursor)
-            print(result)
-            logging.info(f'pd.DataFrame(cursor) time is: {time.time() - add_time2}')
-            logging.info(f'finishing cursor.execute {time.time() - start_time1}')
-            start_time2 = time.time()
+    fetchSize = 10000
+    # New post processing code for edges entity node to entity nodes
+    for i in range(len(edge_entity_entity_queries_list)):
+        start_time2 = time.time()
+        first_pass = True
 
-            # TODO: Table Name splitting needs to be more robust - right now we are assuming that position 1 and 2
-            # will always be src and dst. Is that a correct assumption in our paradigm think?
-            table_name_list = re.split(' ', query)  # table name of the query to execute
-            table_name1 = table_name_list[1].split('.')[0] # src table
-            col_name1 = table_name_list[1].split('.')[1][:-1] # src column, (note last character ',' is removed)
-            table_name2 = table_name_list[2].split('.')[0] # dst/target table
-            col_name2 = table_name_list[2].split('.')[1] # dst/target column
+        # Executing the query and timing it
+        add_time1 = time.time()
+        query = edge_entity_entity_queries_list[i]
+        cursor_name = "edge_entity_entity_cursor" + str(i)  # Name imp because: https://www.psycopg.org/docs/usage.html#server-side-cursors
+        cursor = []
+        if db_server == 'maria-db':
+            cursor = cnx.cursor()
+        elif db_server == 'postgre-sql':
+            cursor = cnx.cursor(name = cursor_name)
+        cursor.execute(query)
+        logging.info(f'Cursor.execute time is: {time.time() - add_time1}')
+
+        # Getting Basic Details
+        table_name_list = re.split(' ', query)  # table name of the query to execute
+        table_name1 = table_name_list[1].split('.')[0] # src table
+        col_name1 = table_name_list[1].split('.')[1][:-1] # src column, (note last character ',' is removed)
+        table_name2 = table_name_list[2].split('.')[0] # dst/target table
+        col_name2 = table_name_list[2].split('.')[1] # dst/target column
+        
+        # Processing each batch of cursor on client
+        rowsCompleted = 0
+
+        # In an initial sample pass, estimates the optimal maximum possible fetchSize for given query based on memory usage report of virtual_memory() 
+        # process data with fetchSize=10000, record the amount of memory used,
+        # increase fetchSize if the amount of memory used is less than half of machine's total available memory, 
+        # Note: all unit size are in bytes, fetchSize limited between 10000 and 100000000 bytes
+        if first_pass:
+            mem_copy = psutil.virtual_memory()
+            mem_copy_used = mem_copy.used
+            limit_fetchSize = mem_copy.available / 2
+
+        # Potential issue: There might be duplicates now possible as drop_duplicates over smaller range
+        # expected that user db does not have dupliacted
+        while (True): # Looping till all rows are completed and processed
+            result = cursor.fetchmany(fetchSize)
+            result = pd.DataFrame(result)
+            if (result.shape[0] == 0):
+                break
 
             # Cleaning Part
             result = result.applymap(clean_token)  # strip tokens and lower case strings
@@ -481,9 +549,7 @@ def post_processing(cnx, edge_entity_entity_queries_list, edge_entity_entity_rel
             result.iloc[:, 1] = table_name2 + "_" + col_name2 + '_' + result.iloc[:, 1] # dst/target
             result.insert(1, "rel", edge_entity_entity_rel_list[i])  # rel
             result.columns = ["src", "rel", "dst"]
-            num_uniq.append(len(result.iloc[:, 2].unique()))
-            num_edge_type.append(result.shape[0])
-
+            
             if generate_uuid:
                 # convert entity nodes to respective UUIDs
                 result['src'] = result['src'].map(entity_mapping)
@@ -496,172 +562,66 @@ def post_processing(cnx, edge_entity_entity_queries_list, edge_entity_entity_rel
                     logging.warning(f'Some dst column entities did not map in edges_entity_entity')
                     exit(1)
 
-            src_rel_dst = pd.concat([src_rel_dst, result])
-            logging.info(f'finishing post_processing enttiy nodes {time.time() - start_time2}')
-        
-        # edges from entity node to feature values processing
-        # Note: feature values will not have table_name and col_name appended
-        # TODO: Test Feature values part of post processing
-        for i in range(len(edge_entity_feature_val_queries_list)):
-            query = edge_entity_feature_val_queries_list[i]
-            cursor_name = "edge_entity_feature_val_cursor" + str(i)  # Name imp because: https://www.psycopg.org/docs/usage.html#server-side-cursors
-            cursor = []
-            if db_server == 'maria-db':
-                cursor = cnx.cursor()
-            elif db_server == 'postgre-sql':
-                cursor = cnx.cursor(name = cursor_name)
-            cursor.execute(query)
-            result = pd.DataFrame(cursor)
+            result.to_csv(output_dir / Path("all_edges.txt"), sep='\t',\
+                header=False, index=False, mode='a') # Appending the output to disk
+            del result
+            rowsCompleted += fetchSize
 
-            # TODO: Table Name splitting needs to be more robust - right now we are assuming that position 1 and 2
-            # will always be src and dst. Is that a correct assumption in our paradigm think?
-            table_name_list = re.split(' ', query)  # table name of the query to execute
-            table_name1 = table_name_list[1].split('.')[0] # src table
-            col_name1 = table_name_list[1].split('.')[1][:-1] # src column, (note last character ',' is removed)
-
-            # Cleaning Part
-            result = result.applymap(clean_token)  # strip tokens and lower case strings
-            result = result[~result.iloc[:, 1].isin(INVALID_ENTRY_LIST)]  # clean invalid data
-            result = result[~result.iloc[:, 0].isin(INVALID_ENTRY_LIST)]
-            result = result.drop_duplicates()  # remove invalid row
-
-            result.iloc[:, 0] = table_name1 + "_" + col_name1 + '_' + result.iloc[:, 0]   # src
-            result.insert(1, "rel", edge_entity_feature_val_rel_list[i])  # rel
-            result.columns = ["src", "rel", "dst"]
-            num_uniq.append(len(result.iloc[:, 2].unique()))
-            num_edge_type.append(result.shape[0])
-
-            if generate_uuid:
-                # convert entity nodes to respective UUIDs
-                result['src'] = result['src'].map(entity_mapping)
-                if (result['src'].isna().any()):
-                    logging.warning(f'Some src column entities did not map in edges_entity_entity')
-                    exit(1)
-
-            src_rel_dst = pd.concat([src_rel_dst, result])
-
-        # logging.warning(f'None Count is {none_count}. If not 0 there is some issue as entity mapping does not have some entities')
-        logging.info(f'src_rel_dst\n{src_rel_dst}\n')
-        src_rel_dst.to_csv(output_dir / Path("all_edges(t2g).txt"), sep='\t', header=False, index=False)  # write to txt
-    else:
-        fetchSize = 10000
-        # New post processing code for edges entity node to entity nodes
-        for i in range(len(edge_entity_entity_queries_list)):
-            start_time2 = time.time()
-            first_pass = True
-
-            # Executing the query and timing it
-            add_time1 = time.time()
-            query = edge_entity_entity_queries_list[i]
-            cursor_name = "edge_entity_entity_cursor" + str(i)  # Name imp because: https://www.psycopg.org/docs/usage.html#server-side-cursors
-            cursor = []
-            if db_server == 'maria-db':
-                cursor = cnx.cursor()
-            elif db_server == 'postgre-sql':
-                cursor = cnx.cursor(name = cursor_name)
-            cursor.execute(query)
-            logging.info(f'Cursor.execute time is: {time.time() - add_time1}')
-
-            # Getting Basic Details
-            table_name_list = re.split(' ', query)  # table name of the query to execute
-            table_name1 = table_name_list[1].split('.')[0] # src table
-            col_name1 = table_name_list[1].split('.')[1][:-1] # src column, (note last character ',' is removed)
-            table_name2 = table_name_list[2].split('.')[0] # dst/target table
-            col_name2 = table_name_list[2].split('.')[1] # dst/target column
-            
-            # Processing each batch of cursor on client
-            rowsCompleted = 0
-
-            # In an initial sample pass, estimates the optimal maximum possible fetchSize for given query based on the memory usage report of psutil.virtual_memory() 
-            # process data with fetchSize=10000, record the amount of memory used,
-            # increase fetchSize if the amount of memory used is less than half of machine's total available memory, 
-            # Note: all unit size are in bytes, fetchSize limited between 10000 and 100000000 bytes
             if first_pass:
-                #fetchSize = 10000  # start with 10000
-                #rowsCompleted = 0
-                mem_copy = psutil.virtual_memory()
-                print(f'mem_copy={mem_copy}')
-                mem_copy_used = mem_copy.used
-                limit_fetchSize = mem_copy.available / 2
-                # fetchSize, rowsCompleted = post_processing_helper(cursor, table_name1, table_name2, col_name1, col_name2, edge_entity_entity_rel_list[i], generate_uuid, false)
-                # print(fetchSize)
+                delta = psutil.virtual_memory().used - mem_copy_used # delta between two virtual_memory(), i.e. mem used for curr fetchSize
+                est_fetchSize = limit_fetchSize / delta * fetchSize # estimated optimal fetchSize for 
+                if est_fetchSize > limit_fetchSize:
+                    fetchSize = int(limit_fetchSize)
+                elif 10000 < est_fetchSize and est_fetchSize <= limit_fetchSize:
+                    fetchSize = int(est_fetchSize)
+                else:
+                    fetchSize = 10000
+                first_pass = False  # executing get_fetchSize means we are in 
+        logging.info(f'finishing post_processing enttiy nodes, execution time: {time.time() - start_time2}')
 
-            # Potential issue: There might be duplicates now possible as drop_duplicates over smaller range
-            # expected that user db does not have dupliacted
-            while (True): # Looping till all rows are completed and processed
-                print(f'prev mem: {psutil.virtual_memory()}')
-                result = cursor.fetchmany(fetchSize)
-                result = pd.DataFrame(result)
-                if (result.shape[0] == 0):
-                    break
+    # edges from entity node to feature values processing
+    # Note: feature values will not have table_name and col_name appended
+    fetchSize = 10000
+    for i in range(len(edge_entity_feature_val_queries_list)):
+        start_time2 = time.time()
+        first_pass = True
 
-                # Cleaning Part
-                result = result.applymap(clean_token)  # strip tokens and lower case strings
-                result = result[~result.iloc[:, 1].isin(INVALID_ENTRY_LIST)]  # clean invalid data
-                result = result[~result.iloc[:, 0].isin(INVALID_ENTRY_LIST)]
-                result = result.drop_duplicates()  # remove invalid row
+        # Executing the query and timing it
+        add_time1 = time.time()
+        query = edge_entity_feature_val_queries_list[i]
+        cursor_name = "edge_entity_feature_val_cursor" + str(i)  # Name imp because: https://www.psycopg.org/docs/usage.html#server-side-cursors
+        cursor = []
+        if db_server == 'maria-db':
+            cursor = cnx.cursor()
+        elif db_server == 'postgre-sql':
+            cursor = cnx.cursor(name = cursor_name)
+        cursor.execute(query)
+        logging.info(f'Cursor.execute time is: {time.time() - add_time1}')
+            
+        # Getting Basic Details
+        table_name_list = re.split(' ', query)  # table name of the query to execute
+        table_name1 = table_name_list[1].split('.')[0] # src table
+        col_name1 = table_name_list[1].split('.')[1][:-1] # src column, (note last character ',' is removed)
+        
+        # Processing each batch of cursor on client
+        rowsCompleted = 0
 
-                result.iloc[:, 0] = table_name1 + "_" + col_name1 + '_' + result.iloc[:, 0]   # src
-                result.iloc[:, 1] = table_name2 + "_" + col_name2 + '_' + result.iloc[:, 1] # dst/target
-                result.insert(1, "rel", edge_entity_entity_rel_list[i])  # rel
-                result.columns = ["src", "rel", "dst"]
-                
-                if generate_uuid:
-                    # convert entity nodes to respective UUIDs
-                    result['src'] = result['src'].map(entity_mapping)
-                    if (result['src'].isna().any()):
-                        logging.warning(f'Some src column entities did not map in edges_entity_entity')
-                        exit(1)
-                    
-                    result['dst'] = result['dst'].map(entity_mapping)
-                    if (result['dst'].isna().any()):
-                        logging.warning(f'Some dst column entities did not map in edges_entity_entity')
-                        exit(1)
+        # In an initial sample pass, estimates the optimal maximum possible fetchSize for given query based on memory usage report of virtual_memory() 
+        # process data with fetchSize=10000, record the amount of memory used,
+        # increase fetchSize if the amount of memory used is less than half of machine's total available memory, 
+        # Note: all unit size are in bytes, fetchSize limited between 10000 and 100000000 bytes
+        if first_pass:
+            mem_copy = psutil.virtual_memory()
+            mem_copy_used = mem_copy.used
+            limit_fetchSize = mem_copy.available / 2
 
-                result.to_csv(output_dir / Path("all_edges(t2g).txt"), sep='\t',\
-                    header=False, index=False, mode='a') # Appending the output to disk
-                print(f'new mem: {psutil.virtual_memory()}')
-                del result
-                rowsCompleted += fetchSize
-
-                if first_pass:
-                    print(f'completed till {rowsCompleted} rows')
-                    delta = psutil.virtual_memory().used - mem_copy_used # delta between 2 psutil.virtual_memory() calls, the amount of mem used for fetchSize=10000
-                    print(f'in get_fetchSize {psutil.virtual_memory()}')
-                    est_fetchSize = limit_fetchSize / delta * fetchSize # estimated optimal fetchSize for 
-                    print(f'delta={delta}')
-                    print(f'limit_fetchSize={limit_fetchSize}')
-                    print(f'est_fetchSize={est_fetchSize}')
-                    if est_fetchSize > limit_fetchSize:
-                        fetchSize = int(limit_fetchSize)
-                    elif 10000 < est_fetchSize and est_fetchSize <= limit_fetchSize:
-                        fetchSize = int(est_fetchSize)
-                    else:
-                        fetchSize = 10000
-                    first_pass = False  # executing get_fetchSize means we are in 
-                print(f'completed till {rowsCompleted} rows')
-                # print("At end of batch for loop", psutil.virtual_memory())
-            logging.info(f'finishing post_processing enttiy nodes {time.time() - start_time2}')
-
-        # edges from entity node to feature values processing
-        # Note: feature values will not have table_name and col_name appended
-        # TODO: Test Feature values part of post processing
-        for i in range(len(edge_entity_feature_val_queries_list)):
-            query = edge_entity_feature_val_queries_list[i]
-            cursor_name = "edge_entity_feature_val_cursor" + str(i)  # Name imp because: https://www.psycopg.org/docs/usage.html#server-side-cursors
-            cursor = []
-            if db_server == 'maria-db':
-                cursor = cnx.cursor()
-            elif db_server == 'postgre-sql':
-                cursor = cnx.cursor(name = cursor_name)
-            cursor.execute(query)
-            result = pd.DataFrame(cursor)
-
-            # TODO: Table Name splitting needs to be more robust - right now we are assuming that position 1 and 2
-            # will always be src and dst. Is that a correct assumption in our paradigm think?
-            table_name_list = re.split(' ', query)  # table name of the query to execute
-            table_name1 = table_name_list[1].split('.')[0] # src table
-            col_name1 = table_name_list[1].split('.')[1][:-1] # src column, (note last character ',' is removed)
+        # Potential issue: There might be duplicates now possible as drop_duplicates over smaller range
+        # expected that user db does not have dupliacted
+        while (True): # Looping till all rows are completed and processed
+            result = cursor.fetchmany(fetchSize)
+            result = pd.DataFrame(result)
+            if (result.shape[0] == 0):
+                break
 
             # Cleaning Part
             result = result.applymap(clean_token)  # strip tokens and lower case strings
@@ -672,10 +632,7 @@ def post_processing(cnx, edge_entity_entity_queries_list, edge_entity_entity_rel
             result.iloc[:, 0] = table_name1 + "_" + col_name1 + '_' + result.iloc[:, 0]   # src
             result.insert(1, "rel", edge_entity_feature_val_rel_list[i])  # rel
             result.columns = ["src", "rel", "dst"]
-            num_uniq.append(len(result.iloc[:, 2].unique()))
-            num_edge_type.append(result.shape[0])
-            # print(f'result\n{result}')
-
+            
             if generate_uuid:
                 # convert entity nodes to respective UUIDs
                 result['src'] = result['src'].map(entity_mapping)
@@ -683,32 +640,49 @@ def post_processing(cnx, edge_entity_entity_queries_list, edge_entity_entity_rel
                     logging.warning(f'Some src column entities did not map in edges_entity_entity')
                     exit(1)
 
-            src_rel_dst = pd.concat([src_rel_dst, result])
+            result.to_csv(output_dir / Path("all_edges.txt"), sep='\t',\
+                header=False, index=False, mode='a') # Appending the output to disk
+            del result
+            rowsCompleted += fetchSize
 
-        # logging.warning(f'None Count is {none_count}. If not 0 there is some issue as entity mapping does not have some entities')
-        logging.info(f'src_rel_dst\n{src_rel_dst}\n')
+            if first_pass:
+                delta = psutil.virtual_memory().used - mem_copy_used # delta between two virtual_memory(), mem used for curr fetchSize
+                est_fetchSize = limit_fetchSize / delta * fetchSize # estimated optimal fetchSize for 
+                if est_fetchSize > limit_fetchSize:
+                    fetchSize = int(limit_fetchSize)
+                elif 10000 < est_fetchSize and est_fetchSize <= limit_fetchSize:
+                    fetchSize = int(est_fetchSize)
+                else:
+                    fetchSize = 10000
+                first_pass = False  # executing get_fetchSize means we are in 
+        logging.info(f'finishing post_processing feature nodes, execution time: {time.time() - start_time2}')
     return 0
 
 def main():
     total_time = time.time()
-    global output_dir
-    ret_data = config_parser_fn("conf/config.yaml")
+    parser = set_args()
+    args = parser.parse_args()
+
+    ret_data = config_parser_fn(args.config_path)
     db_server = ret_data[0]
     db_name = ret_data[1]
     db_user = ret_data[2]
     db_password = ret_data[3]
     db_host = ret_data[4]
-    output_dir = ret_data[5]
-    generate_uuid = ret_data[6]
-    entity_queries_list = ret_data[7]
-    edge_entity_entity_queries_list = ret_data[8]
-    edge_entity_entity_rel_list = ret_data[9]
-    edge_entity_feature_val_queries_list = ret_data[10]
-    edge_entity_feature_val_rel_list = ret_data[11]
+    generate_uuid = ret_data[5]
+    entity_queries_list = ret_data[6]
+    edge_entity_entity_queries_list = ret_data[7]
+    edge_entity_entity_rel_list = ret_data[8]
+    edge_entity_feature_val_queries_list = ret_data[9]
+    edge_entity_feature_val_rel_list = ret_data[10]
+
+    output_dir = Path(args.output_directory)
     output_dir.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(filename=output_dir / Path('output.log'), encoding='utf-8', level=logging.INFO) # set filemode='w' if want to start a fresh log file
+
     try:
         logging.info('Starting a new run!!!\n')
+        print('Starting a new run!!!')
         # returning both cnx & cursor because cnx is main object deleting it leads to lose of cursor
         cnx = connect_to_db(db_server, db_name, db_user, db_password, db_host)
         if generate_uuid:
@@ -717,15 +691,16 @@ def main():
         edge_entity_feature_val_queries_list = validation_check_edge_entity_feature_val_queries(edge_entity_feature_val_queries_list)
         
         if generate_uuid:
-            entity_mapping = entity_node_to_uuids(cnx, entity_queries_list, db_server)
+            entity_mapping = entity_node_to_uuids(output_dir, cnx, entity_queries_list, db_server)
         else:
             entity_mapping = None
         
-        src_rel_dst = post_processing(cnx, edge_entity_entity_queries_list, edge_entity_entity_rel_list,
+        src_rel_dst = post_processing(output_dir, cnx, edge_entity_entity_queries_list, edge_entity_entity_rel_list,
             edge_entity_feature_val_queries_list, edge_entity_feature_val_rel_list,
              entity_mapping, generate_uuid, db_server)  # this is the pd dataframe
         # convert_to_int() should be next, but we are relying on the Marius' preprocessing module
         cnx.close()
+        print('Edge file written to ' + str(output_dir / Path("all_edges.txt")))
         logging.info(f'Total execution time: {time.time()-total_time}\n')
     except Exception as e:
         print(e)
