@@ -415,7 +415,7 @@ def entity_node_to_uuids(output_dir, cnx, entity_queries_list, db_server):
         if first_pass:
             mem_copy = psutil.virtual_memory()
             mem_copy_used = mem_copy.used
-            limit_fetchSize = mem_copy.available / 2
+            limit_fetchSize = max(mem_copy.available / 2, 100000000)
 
         # Potential issue: There might be duplicates now possible as drop_duplicates over smaller range
         # expected that user db does not have dupliacted
