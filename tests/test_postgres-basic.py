@@ -207,6 +207,6 @@ class TestConnector():
         itms.sort()
         itms = ['orders_item_' + elem for elem in itms]
         with open(output_dir / "entity_mapping.txt", "r") as file:
-            lines = file.readlines().rstrip()
+            lines = file.readlines()
             print(lines)
         pass
