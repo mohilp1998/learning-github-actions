@@ -13,6 +13,15 @@ class TestConnector():
     host = os.environ.get("POSTGRES_HOST")
     port = os.environ.get("POSTGRES_PORT")
 
+    customer_names = ['Sofia', 'Lukas', 'Rajesh', 'Daiyu', 'Hina', 'Lorenzo',
+                        'Donghai', 'Shuchang', 'Johnny']
+    country_names = ['Spain', 'Germany', 'India', 'China', 'Japan', 'Italy',
+                        'China', 'China', 'USA']
+    item_names = ['fenugreek', 'soy sauce', 'oregano', 'tomato', 'cumin', 'soy sauce',
+                    'eggs', 'onions', 'onions', 'wasabi', 'rice', 'chicken breast',
+                    'salmon', 'sourdough bread', 'meatballs', 'root beer', 'croissant',
+                    'taco sauce']
+
     @classmethod
     def set_up(self):
         pass
@@ -52,62 +61,62 @@ class TestConnector():
         # Insert some data
         # Inserting Customers
         cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
-            VALUES (1, 'Sofia', 'Spain', '6081237654')")
+            VALUES (1, '{self.customer_names[0]}', '{self.country_names[0]}', '6081237654')")
         cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
-            VALUES (2, 'Lukas', 'Germany', '6721576540')")
+            VALUES (2, '{self.customer_names[1]}', '{self.country_names[1]}', '6721576540')")
         cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
-            VALUES (3, 'Rajesh', 'India', '5511234567')")
+            VALUES (3, '{self.customer_names[2]}', '{self.country_names[2]}', '5511234567')")
         cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
-            VALUES (4, 'Daiyu', 'China', '3211248173')")
+            VALUES (4, '{self.customer_names[3]}', '{self.country_names[3]}', '3211248173')")
         cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
-            VALUES (5, 'Hina', 'Japan', '6667890001')")
+            VALUES (5, '{self.customer_names[4]}', '{self.country_names[4]}', '6667890001')")
         cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
-            VALUES (6, 'Lorenzo', 'Italy', '6260001111')")
+            VALUES (6, '{self.customer_names[5]}', '{self.country_names[5]}', '6260001111')")
         cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
-            VALUES (7, 'Donghai', 'China', '7874561234')")
+            VALUES (7, '{self.customer_names[6]}', '{self.country_names[6]}', '7874561234')")
         cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
-            VALUES (8, 'Shuchang', 'China', '4041015059')")
+            VALUES (8, '{self.customer_names[7]}', '{self.country_names[7]}', '4041015059')")
         cur.execute(f"INSERT INTO CUSTOMERS (ID,CUSTOMERNAME,COUNTRY,PHONE) \
-            VALUES (9, 'Johnny', 'USA', '5647525398')")
+            VALUES (9, '{self.customer_names[8]}', '{self.country_names[8]}', '5647525398')")
         conn.commit()
 
         # Inserting Orders
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (1, 3, 5, 'fenugreek')")
+            VALUES (1, 3, 5, '{self.item_names[0]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (2, 7, 7, 'soy sauce')")
+            VALUES (2, 7, 7, '{self.item_names[1]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (3, 6, 2, 'oregano')")
+            VALUES (3, 6, 2, '{self.item_names[2]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (4, 1, 3, 'tomato')")
+            VALUES (4, 1, 3, '{self.item_names[3]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (5, 3, 5, 'cumin')")
+            VALUES (5, 3, 5, '{self.item_names[4]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (6, 5, 7, 'soy sauce')")
+            VALUES (6, 5, 7, '{self.item_names[5]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (7, 2, 1, 'eggs')")
+            VALUES (7, 2, 1, '{self.item_names[6]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (8, 9, 3, 'onions')")
+            VALUES (8, 9, 3, '{self.item_names[7]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (9, 4, 3, 'onions')")
+            VALUES (9, 4, 3, '{self.item_names[8]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (10, 5, 15, 'wasabi')")
+            VALUES (10, 5, 15, '{self.item_names[9]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (11, 8, 9, 'rice')")
+            VALUES (11, 8, 9, '{self.item_names[10]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (12, 4, 12, 'chicken breast')")
+            VALUES (12, 4, 12, '{self.item_names[11]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (13, 5, 20, 'salmon')")
+            VALUES (13, 5, 20, '{self.item_names[12]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (14, 6, 11, 'sourdough bread')")
+            VALUES (14, 6, 11, '{self.item_names[13]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (15, 2, 8, 'meatballs')")
+            VALUES (15, 2, 8, '{self.item_names[14]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (16, 9, 2, 'root beer')")
+            VALUES (16, 9, 2, '{self.item_names[15]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (17, 2, 6, 'croissant')")
+            VALUES (17, 2, 6, '{self.item_names[16]}')")
         cur.execute(f"INSERT INTO ORDERS (ID,CUSTOMERID,AMOUNT,ITEM) \
-            VALUES (18, 1, 4, 'taco sauce')")
+            VALUES (18, 1, 4, '{self.item_names[17]}')")
         conn.commit()
 
         conn.close()
