@@ -148,8 +148,11 @@ class TestConnector():
         conn.close()
 
         # Setting the connect function to test
-        conn = connect_to_db(db_server = "postgre-sql", db_name = self.database, db_user = self.user,
-            db_password = self.password, db_host = self.host)
+        conn = connect_to_db(db_server = "postgre-sql",
+                            db_name = self.database,
+                            db_user = self.user,
+                            db_password = self.password,
+                            db_host = self.host)
         cur = conn.cursor()
         cur.execute("SELECT id, name, age from COMPANY")
         rows = cur.fetchall()
@@ -177,9 +180,9 @@ class TestConnector():
                                 host = self.host,
                                 port = self.port)
         entity_queries_list = []
-        entity_queries_list.append("SELECT DISTINCT customers.customername from customers;")
-        entity_queries_list.append("SELECT DISTINCT customers.country from customers;")
-        entity_queries_list.append("SELECT DISTINCT orders.item from orders;")
+        entity_queries_list.append("SELECT DISTINCT customers.customername from customers ORDER BY customers.customername ASC;")
+        entity_queries_list.append("SELECT DISTINCT customers.country from customers ORDER BY customers.country ASC;")
+        entity_queries_list.append("SELECT DISTINCT orders.item from orders ORDER BY orders.item ASC;")
 
         # Testing the function
         entity_mapping = entity_node_to_uuids(output_dir, conn, entity_queries_list, db_server)
