@@ -384,6 +384,7 @@ def entity_node_to_uuids(output_dir, cnx, entity_queries_list, db_server):
     fetchSize = 10000
     # New post processing code for edges entity node to entity nodes
     for i in range(len(entity_queries_list)):
+        print(entity_queries_list[i])
         start_time2 = time.time()
         first_pass = True
 
