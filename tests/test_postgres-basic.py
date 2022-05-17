@@ -232,7 +232,7 @@ class TestConnector():
         self.fill_db() # Filling database with data for testing
         
         # Getting all the inputs for the function
-        output_dir = Path("output_dir/")
+        output_dir = Path("output_dir_edges_entity_entity/")
         output_dir.mkdir(parents=True, exist_ok=True)
         
         db_server = 'postgre-sql'
@@ -267,8 +267,41 @@ class TestConnector():
                         db_server)
         
         # Asserting the correctionness of the output
+        # Predefined correct output for the input queries
+        correct_output = []
+
+        # All the outputs for query 1
+        correct_output.append(f"customers_customername_daiyu\tlives_in\tcustomers_country_china\n")
+        correct_output.append(f"customers_customername_donghai\tlives_in\tcustomers_country_china\n")
+        correct_output.append(f"customers_customername_hina\tlives_in\tcustomers_country_japan\n")
+        correct_output.append(f"customers_customername_johnny\tlives_in\tcustomers_country_usa\n")
+        correct_output.append(f"customers_customername_lorenza\tlives_in\tcustomers_country_italy\n")
+        correct_output.append(f"customers_customername_lukas\tlives_in\tcustomers_country_germany\n")
+        correct_output.append(f"customers_customername_rajesh\tlives_in\tcustomers_country_india\n")
+        correct_output.append(f"customers_customername_shuchang\tlives_in\tcustomers_country_china\n")
+        correct_output.append(f"customers_customername_sofia\tlives_in\tcustomers_country_spain\n")
+
+        # All the outputs for query 2
+        correct_output.append(f"orders_item_chicken breast\tordered_by_people_from_country\tcustomers_country_china\n")
+        correct_output.append(f"orders_item_croissant\tordered_by_people_from_country\tcustomers_country_germany\n")
+        correct_output.append(f"orders_item_cumin\tordered_by_people_from_country\tcustomers_country_india\n")
+        correct_output.append(f"orders_item_eggs\tordered_by_people_from_country\tcustomers_country_germany\n")
+        correct_output.append(f"orders_item_fenugreek\tordered_by_people_from_country\tcustomers_country_india\n")
+        correct_output.append(f"orders_item_meatballs\tordered_by_people_from_country\tcustomers_country_germany\n")
+        correct_output.append(f"orders_item_onions\tordered_by_people_from_country\tcustomers_country_usa\n")
+        correct_output.append(f"orders_item_onions\tordered_by_people_from_country\tcustomers_country_china\n")
+        correct_output.append(f"orders_item_oregano\tordered_by_people_from_country\tcustomers_country_italy\n")
+        correct_output.append(f"orders_item_rice\tordered_by_people_from_country\tcustomers_country_china\n")
+        correct_output.append(f"orders_item_root beer\tordered_by_people_from_country\tcustomers_country_usa\n")
+        correct_output.append(f"orders_item_salmon\tordered_by_people_from_country\tcustomers_country_japan\n")
+        correct_output.append(f"orders_item_sourdough bread\tordered_by_people_from_country\tcustomers_country_italy\n")
+        correct_output.append(f"orders_item_soy sauce\tordered_by_people_from_country\tcustomers_country_japan\n")
+        correct_output.append(f"orders_item_soy sauce\tordered_by_people_from_country\tcustomers_country_china\n")
+        correct_output.append(f"orders_item_taco sauce\tordered_by_people_from_country\tcustomers_country_spain\n")
+        correct_output.append(f"orders_item_tomato\tordered_by_people_from_country\tcustomers_country_spain\n")
+        correct_output.append(f"orders_item_wasabi\tordered_by_people_from_country\tcustomers_country_japan\n")
         with open(output_dir / "all_edges.txt", "r") as file:
             for line in file:
-                print(line)
+                assert(line in correct_output)
         
         return
