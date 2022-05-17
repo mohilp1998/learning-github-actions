@@ -275,7 +275,7 @@ class TestConnector():
         correct_output.append(f"customers_customername_donghai\tlives_in\tcustomers_country_china\n")
         correct_output.append(f"customers_customername_hina\tlives_in\tcustomers_country_japan\n")
         correct_output.append(f"customers_customername_johnny\tlives_in\tcustomers_country_usa\n")
-        correct_output.append(f"customers_customername_lorenza\tlives_in\tcustomers_country_italy\n")
+        correct_output.append(f"customers_customername_lorenzo\tlives_in\tcustomers_country_italy\n")
         correct_output.append(f"customers_customername_lukas\tlives_in\tcustomers_country_germany\n")
         correct_output.append(f"customers_customername_rajesh\tlives_in\tcustomers_country_india\n")
         correct_output.append(f"customers_customername_shuchang\tlives_in\tcustomers_country_china\n")
