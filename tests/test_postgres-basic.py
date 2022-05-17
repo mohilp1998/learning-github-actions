@@ -270,7 +270,7 @@ class TestConnector():
         # Predefined correct output for the input queries
         correct_output = []
 
-        # All the outputs for query 1
+        # expected outputs for query 1
         correct_output.append(f"customers_customername_daiyu\tlives_in\tcustomers_country_china\n")
         correct_output.append(f"customers_customername_donghai\tlives_in\tcustomers_country_china\n")
         correct_output.append(f"customers_customername_hina\tlives_in\tcustomers_country_japan\n")
@@ -281,7 +281,7 @@ class TestConnector():
         correct_output.append(f"customers_customername_shuchang\tlives_in\tcustomers_country_china\n")
         correct_output.append(f"customers_customername_sofia\tlives_in\tcustomers_country_spain\n")
 
-        # All the outputs for query 2
+        # expected outputs for query 2
         correct_output.append(f"orders_item_chicken breast\tordered_by_people_from_country\tcustomers_country_china\n")
         correct_output.append(f"orders_item_croissant\tordered_by_people_from_country\tcustomers_country_germany\n")
         correct_output.append(f"orders_item_cumin\tordered_by_people_from_country\tcustomers_country_india\n")
@@ -350,10 +350,26 @@ class TestConnector():
         # Predefined correct output for the input queries
         correct_output = []
 
-        # All the outputs for query 
+        # expected outputs for query
+        correct_output.append(f"orders_item_chicken breast\tcosts\t12\n")
+        correct_output.append(f"orders_item_croissant\tcosts\t6\n")
+        correct_output.append(f"orders_item_cumin\tcosts\t5\n")
+        correct_output.append(f"orders_item_eggs\tcosts\t1\n")
+        correct_output.append(f"orders_item_fenugreek\tcosts\t5\n")
+        correct_output.append(f"orders_item_meatballs\tcosts\t8\n")
+        correct_output.append(f"orders_item_onions\tcosts\t3\n")
+        correct_output.append(f"orders_item_oregano\tcosts\t2\n")
+        correct_output.append(f"orders_item_rice\tcosts\t9\n")
+        correct_output.append(f"orders_item_root beer\tcosts\t2\n")
+        correct_output.append(f"orders_item_salmon\tcosts\t20\n")
+        correct_output.append(f"orders_item_sourdough bread\tcosts\t11\n")
+        correct_output.append(f"orders_item_soy sauce\tcosts\t7\n")
+        correct_output.append(f"orders_item_taco sauce\tcosts\t4\n")
+        correct_output.append(f"orders_item_tomato\tcosts\t3\n")
+        correct_output.append(f"orders_item_wasabi\tcosts\t15\n")
 
         with open(output_dir / "all_edges.txt", "r") as file:
             for line in file:
-                print(line)
+                assert(line in correct_output)
         
         return
