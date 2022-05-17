@@ -305,3 +305,55 @@ class TestConnector():
                 assert(line in correct_output)
         
         return
+    
+    def test_edges_entity_feature_values(self):
+        """
+        Testing the edges_entity_feature_values function
+        """
+        self.fill_db() # Filling the database with the test data
+
+        # Getting all the inputs to the function
+        output_dir = Path("output_dir_edges_entity_feature_values/")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        db_server = 'postgre-sql'
+        
+        conn = psycopg2.connect(database = self.database,
+                                user = self.user,
+                                password = self.password,
+                                host = self.host,
+                                port = self.port)
+        
+        edge_entity_entity_queries_list = []
+        edge_entity_entity_rel_list = []
+
+        edge_entity_feature_val_queries_list = []
+        edge_entity_feature_val_queries_list.append("SELECT orders.item, orders.amount FROM orders ORDER BY orders.item ASC;")
+        edge_entity_feature_val_rel_list = ["costs"]
+
+        entity_mapping = None
+
+        generate_uuid = False
+
+        # Testing the function
+        post_processing(output_dir,
+                        conn,
+                        edge_entity_entity_queries_list,
+                        edge_entity_entity_rel_list,
+                        edge_entity_feature_val_queries_list,
+                        edge_entity_feature_val_rel_list,
+                        entity_mapping,
+                        generate_uuid,
+                        db_server)
+        
+        # Asserting the correctionness of the output
+        # Predefined correct output for the input queries
+        correct_output = []
+
+        # All the outputs for query 
+
+        with open(output_dir / "all_edges.txt", "r") as file:
+            for line in file:
+                print(line)
+        
+        return
